@@ -57,5 +57,16 @@ public final class TestT8CreatePromotion {
                 LocalDate.of(2031, 4, 1), LocalDate.of(2031, 4, 2), 1, "x", new BigDecimal("5")));
         Check.expectFailure("end before start is rejected", () -> t8.create(UPC,
                 LocalDate.of(2031, 4, 10), LocalDate.of(2031, 4, 1), 1, "x", new BigDecimal("5")));
+
+        Check.step("Case 7: update the 2031-03-01 promotion's discount from 15% to 25% -> COMMIT");
+        Check.that(t8.update(UPC, LocalDate.of(2031, 3, 1), new BigDecimal("25"), "Spring sale - revised"),
+                "update returned true");
+        Check.money("25.00", TestSupport.queryDecimal(APP,
+                "SELECT discount_percent FROM dbo.sales_promotion WHERE UPC = ? AND promotion_start_date = ?",
+                UPC, LocalDate.of(2031, 3, 1)), "discount_percent after update");
+
+        Check.step("Case 8: update a promotion that does not exist -> no rows changed");
+        Check.that(!t8.update(UPC, LocalDate.of(2031, 9, 9), new BigDecimal("50"), "x"),
+                "update returned false");
     }
 }
